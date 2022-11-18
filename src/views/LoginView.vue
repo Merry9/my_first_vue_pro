@@ -21,7 +21,9 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs, ref } from 'vue'
 import { LoginData } from '../type/login'
-import type { FormInstance } from 'element-plus'
+import type { FormInstance } from 'element-plus';
+import { login } from '../request/api';
+import { useRouter } from 'vue-router';
 export default defineComponent({
   setup() {
     const data = reactive(new LoginData())
@@ -32,24 +34,28 @@ export default defineComponent({
       ],
       password: [
         { required: true, message: 'Please input password', trigger: 'blur' },
-        { min: 3, max: 5, message: 'Length should be 3 to 5', trigger: 'blur' },
+        { min: 3, max: 7, message: 'Length should be 3 to 5', trigger: 'blur' },
       ],
     }
     // 登录
     const ruleFormRef = ref<FormInstance>();
+    const router = useRouter();
     const submitForm = (formEl: FormInstance | undefined) => {
-      if(!formEl){
+      if (!formEl) {
         return;
       }
-      formEl.validate(valid=>{
-        if(valid){
-          console.log('submit');
-        }else{
-          console.log('error');
-          return false; 
+      formEl.validate((valid) => {
+        if (valid) {
+          login(data.ruleForm).then((res) => {
+            localStorage.setItem('token', res.data.data.token);
+            router.push('/');
+          }).catch((err) => {
+            console.log(err);
+          });
+        } else {
+          return false;
         }
       })
-      console.log(formEl);
     }
     return { ...toRefs(data), rules, ruleFormRef, submitForm }
   }
