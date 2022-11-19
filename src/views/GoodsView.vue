@@ -24,18 +24,24 @@
 </template>
 <script lang="ts">
 import { computed } from '@vue/reactivity';
-import { defineComponent, reactive, toRefs, watch } from 'vue';
+import { defineComponent, onMounted, reactive, toRefs, watch } from 'vue';
 import { getGoodsList } from '../request/api';
 import { InitData, listInt } from '../type/goods'
 export default defineComponent({
     setup() {
         const dataList = reactive(new InitData());
         const { selectData } = dataList;
-        getGoodsList().then((res) => {
-            const { data = [] } = res.data;
-            dataList.list = data;
-            selectData.count = data.length;
-        })
+        onMounted(() => {
+            getGoods();
+        });
+        const getGoods = () => {
+            getGoodsList().then((res) => {
+                const { data = [] } = res.data;
+                dataList.list = data;
+                selectData.count = data.length;
+            })
+        }
+
         const newDataList = reactive({
             comList: computed(() => {
                 const { page = 1, pageSize = 10 } = selectData;
@@ -74,11 +80,7 @@ export default defineComponent({
         watch([() => dataList.selectData.title, () => dataList.selectData.introduce], () => {
             const { title = '', introduce = '' } = dataList.selectData;
             if (title == '' && introduce == '') {
-                getGoodsList().then((res) => {
-                    const { data = [] } = res.data;
-                    dataList.list = data;
-                    selectData.count = data.length;
-                })
+                getGoods();
             }
         })
         return { ...toRefs(dataList), newDataList, currentChange, sizeChange, onSubmit }
